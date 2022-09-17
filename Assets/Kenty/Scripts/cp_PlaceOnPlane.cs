@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.UI;
 
 namespace UnityEngine.XR.ARFoundation.Samples
 {
@@ -18,6 +19,11 @@ namespace UnityEngine.XR.ARFoundation.Samples
         [SerializeField]
         [Tooltip("Instantiates this prefab on a plane at the touch location.")]
         GameObject m_PlacedPrefab;
+        List<GameObject> gameObjectsList = new List<GameObject>();
+
+        private float paintScore = 0f;
+        [SerializeField]
+        Text scoreText;
 
         /// <summary>
         /// The prefab to instantiate on touch.
@@ -36,6 +42,7 @@ namespace UnityEngine.XR.ARFoundation.Samples
         void Awake()
         {
             m_RaycastManager = GetComponent<ARRaycastManager>();
+            m_PlacedPrefab.GetComponent<Renderer>().material.color = Color.red;
         }
 
         bool TryGetTouchPosition(out Vector2 touchPosition)
@@ -60,15 +67,39 @@ namespace UnityEngine.XR.ARFoundation.Samples
                 // Raycast hits are sorted by distance, so the first one
                 // will be the closest hit.
                 var hitPose = s_Hits[0].pose;
+                Quaternion Fixminus = Quaternion.Euler(-90, 0, 0);
 
-                if (spawnedObject == null)
+                Ray ray = Camera.main.ScreenPointToRay(touchPosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit))
                 {
-                    spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation);
+                    if (paintScore > 100)
+                    {
+                        m_PlacedPrefab.GetComponent<Renderer>().material.color = Color.blue;
+                    }
+                    if (hit.collider.CompareTag("paintPlane"))
+                    {
+
+                    }
+                    else
+                    {
+                        paintScore += 1f;
+                        spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation * Fixminus);
+                    }
+                    //spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation * Fixminus);
+
                 }
-                else
-                {
-                    spawnedObject.transform.position = hitPose.position;
-                }
+
+                scoreText.text = paintScore.ToString();
+
+                //if (spawnedObject == null)
+                //{
+                //    spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation);
+                //}
+                //else
+                //{
+                //    spawnedObject.transform.position = hitPose.position;
+                //}
             }
         }
 
